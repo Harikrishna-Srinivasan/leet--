@@ -7,7 +7,7 @@ export default function Home() {
             <Navbar />
 
             <main className="pt-32 pb-16 px-6 relative overflow-hidden">
-                <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:14px_24px]"></div>
+                <div className="absolute inset-0 -z-10 h-full w-full bg-white dark:bg-black bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-size-[14px_24px]"></div>
 
                 {/* Hero Section */}
                 <section className="max-w-5xl mx-auto text-center mb-32 relative z-10 animate-fade-in-up">

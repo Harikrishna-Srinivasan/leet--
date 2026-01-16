@@ -32,7 +32,15 @@ export async function Navbar() {
                                     Sign Out
                                 </button>
                             </form>
-                            <div className="h-8 w-8 rounded-full bg-linear-to-tr from-gray-200 to-gray-400 dark:from-neutral-800 dark:to-neutral-600 ring-2 ring-border shadow-inner" />
+                            {session.user.image ? (
+                                <img
+                                    src={session.user.image}
+                                    alt={session.user.name || "User avatar"}
+                                    className="h-8 w-8 rounded-full ring-2 ring-border shadow-inner object-cover"
+                                />
+                            ) : (
+                                <div className="h-8 w-8 rounded-full bg-linear-to-tr from-gray-200 to-gray-400 dark:from-neutral-800 dark:to-neutral-600 ring-2 ring-border shadow-inner" />
+                            )}
                         </div>
                     ) : (
                         <Link href="/login/oauth" className="px-5 py-2 rounded-full bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-all hover:scale-[1.02] shadow-sm">

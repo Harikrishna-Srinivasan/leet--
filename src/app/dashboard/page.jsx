@@ -11,7 +11,7 @@ export default async function DashboardPage() {
         redirect("/login/oauth");
     }
 
-    const { user, progress, recommendations, topTopics, nextMilestone, stats } = await getDashboardData(session.user.id);
+    const { user, progress, recommendations, topTopics, weakTopics, nextMilestone, stats } = await getDashboardData(session.user.id);
 
     const showProgressReport = stats.readinessScore >= 30;
 
@@ -124,6 +124,30 @@ export default async function DashboardPage() {
                                         START LEARNING
                                     </a>
                                 </div>
+                            </div>
+                        </section>
+                    )}
+                    {weakTopics && weakTopics.length > 0 && (
+                        <section className="mb-12">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+                                    Focus Topics
+                                </h2>
+                            </div>
+                            <div className="flex flex-wrap gap-3">
+                                {weakTopics.map((topic, index) => (
+                                    <div
+                                        key={index}
+                                        className="px-3 py-2 rounded-full border border-border bg-muted/40 text-xs font-medium flex items-center gap-2"
+                                    >
+                                        <span>{topic.name}</span>
+                                        {typeof topic.score === "number" && (
+                                            <span className="text-[10px] text-muted-foreground">
+                                                priority refresh · {topic.score}%
+                                            </span>
+                                        )}
+                                    </div>
+                                ))}
                             </div>
                         </section>
                     )}

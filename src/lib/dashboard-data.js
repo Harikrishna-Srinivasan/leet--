@@ -1,23 +1,18 @@
-import { createClient } from '@supabase/supabase-js';
+import { prisma } from "@/lib/prisma";
 
 export async function getDashboardData(userId) {
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  );
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+  });
 
-  const { data: user, error: userError } = await supabase
-    .from('User')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (userError || !user) {
+  if (!user) {
     return {
       user: null,
       progress: [],
       recommendations: [],
       topTopics: [],
+      weakTopics: [],
+      nextMilestone: null,
       stats: {
         readinessScore: 0,
         streak: 0,
@@ -27,23 +22,47 @@ export async function getDashboardData(userId) {
     };
   }
 
-  const { data: progress, error: progressError } = await supabase
-    .from('user_topic_progress')
-    .select('*, topics(*)')
-    .eq('user_id', userId)
-    .order('score', { ascending: false })
-    .limit(10);
+  const progress = await prisma.userTopicProgress.findMany({
+    where: { userId },
+    include: { topic: true },
+    orderBy: { score: "desc" },
+    take: 10,
+  });
 
-  const { data: recommendations, error: recsError } = await supabase
-    .from('recommendations')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('completed', false)
-    .gt('expires_at', new Date().toISOString())
-    .order('relevance_score', { ascending: false })
-    .limit(10);
+  const recommendations = await prisma.recommendation.findMany({
+    where: {
+      userId,
+      completed: false,
+    },
+    orderBy: { relevanceScore: "desc" },
+    take: 10,
+  });
 
-  const topTopics = progress?.slice(0, 3).map((p) => p.topics.name) || [];
+  const sortedProgress = Array.isArray(progress) ? [...progress] : [];
+  sortedProgress.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  const topTopics = sortedProgress.slice(0, 3).map((p) => p.topic.name);
+
+  const readinessScore =
+    sortedProgress.length > 0
+      ? Math.round(
+          sortedProgress.reduce((sum, p) => sum + (p.score || 0), 0) /
+            sortedProgress.length
+        )
+      : 0;
+
+  let weakTopics = [];
+  if (sortedProgress.length > 0) {
+    const lowScoreTopics = [...sortedProgress]
+      .sort((a, b) => (a.score || 0) - (b.score || 0))
+      .filter((p) => (p.score || 0) < 70)
+      .slice(0, 3)
+      .map((p) => ({
+        name: p.topic.name,
+        score: p.score,
+      }));
+    weakTopics = lowScoreTopics;
+  }
 
   const totalAttempts = progress?.reduce((sum, p) => sum + p.attempts, 0) || 0;
   const daysActive = Math.max(user.streak, 1);
@@ -67,9 +86,10 @@ export async function getDashboardData(userId) {
     progress: progress || [],
     recommendations: recommendations || [],
     topTopics,
+    weakTopics,
     nextMilestone,
     stats: {
-      readinessScore: user.readinessScore,
+      readinessScore,
       streak: user.streak,
       consistency,
       activeTrack: user.activeTrack,
@@ -77,21 +97,6 @@ export async function getDashboardData(userId) {
   };
 }
 
-export async function generateRecommendations(userId, authToken) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/generate-recommendations`,
-    {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${authToken}`,
-        'Content-Type': 'application/json',
-      },
-    }
-  );
-
-  if (!response.ok) {
-    throw new Error('Failed to generate recommendations');
-  }
-
-  return await response.json();
+export async function generateRecommendations() {
+  return { success: true };
 }

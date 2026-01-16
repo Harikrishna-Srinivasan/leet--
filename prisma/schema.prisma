@@ -1,5 +1,5 @@
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -9,14 +9,14 @@ generator client {
 
 model User {
   id             String    @id @default(cuid())
-  email          String?   @unique @db.VarChar(191)
+  email          String?   @unique
   emailVerified  DateTime?
-  name           String?   @db.VarChar(64)
-  image          String?   @db.VarChar(191)
+  name           String?
+  image          String?
 
-  readinessScore Int       @default(0) @db.TinyInt
-  streak         Int       @default(0) @db.SmallInt
-  activeTrack    String?   @db.VarChar(32)
+  readinessScore Int       @default(0)
+  streak         Int       @default(0)
+  activeTrack    String?
 
   accounts       Account[]
   weakTopics     Json?   @default("[]")
